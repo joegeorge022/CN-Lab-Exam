@@ -1,28 +1,42 @@
-
 import java.net.*;
 import java.io.*;
-import java.nio.file.*;
 
 class FileServer {
     public static void main(String[] args) throws Exception {
-        ServerSocket ss = new ServerSocket(5004);
-        System.out.println("File Server Started");
+        ServerSocket ss = new ServerSocket(5504);
+        long pid = ProcessHandle.current().pid();
+
+        System.out.println("File Server Started. PID: " + pid);
 
         while (true) {
             Socket s = ss.accept();
 
             new Thread(() -> {
                 try {
-                    BufferedReader file = new BufferedReader(
-                        new FileReader("test.txt"));
+                    BufferedReader in = new BufferedReader(
+                        new InputStreamReader(s.getInputStream()));
                     PrintWriter out = new PrintWriter(
                         s.getOutputStream(), true);
 
-                    String line;
-                    while ((line = file.readLine()) != null)
-                        out.println(line);
+                    String filename = in.readLine();
+                    File file = new File(filename);
 
-                    file.close();
+                    out.println("Server PID: " + pid);
+
+                    if (file.isFile()) {
+                        out.println("File found:");
+                        BufferedReader fr = new BufferedReader(
+                            new FileReader(file));
+
+                        String line;
+                        while ((line = fr.readLine()) != null)
+                            out.println(line);
+
+                        fr.close();
+                    } else {
+                        out.println("File not found!");
+                    }
+
                     s.close();
                 } catch (Exception e) {
                     System.out.println("Error");
