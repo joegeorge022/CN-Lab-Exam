@@ -1,20 +1,23 @@
-
 import java.net.*;
+import java.util.*;
 
 class UDPClient {
     public static void main(String[] args) throws Exception {
         DatagramSocket ds = new DatagramSocket();
+        Scanner sc = new Scanner(System.in);
 
-        byte[] b = "Hello Server".getBytes();
+        System.out.print("Enter sentence: ");
+        String msg = sc.nextLine();
+        byte[] b = msg.getBytes();
+
         InetAddress ip = InetAddress.getByName("localhost");
+        ds.send(new DatagramPacket(b, b.length, ip, 5501));
 
-        ds.send(new DatagramPacket(b, b.length, ip, 5001));
-
-        byte[] r = new byte[1024];
+        byte[] r = new byte[2048];
         DatagramPacket p = new DatagramPacket(r, r.length);
         ds.receive(p);
 
-        System.out.println("Server: " +
+        System.out.println("Formal English: " +
             new String(p.getData(), 0, p.getLength()));
 
         ds.close();
