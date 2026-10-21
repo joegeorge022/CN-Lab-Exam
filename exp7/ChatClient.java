@@ -1,10 +1,9 @@
-
 import java.net.*;
 import java.io.*;
 
 class ChatClient {
     public static void main(String[] args) throws Exception {
-        Socket s = new Socket("localhost", 5002);
+        Socket s = new Socket("localhost", 5502);
 
         BufferedReader in = new BufferedReader(
             new InputStreamReader(s.getInputStream()));
@@ -22,7 +21,10 @@ class ChatClient {
         }).start();
 
         String msg;
-        while ((msg = kb.readLine()) != null)
+        while ((msg = kb.readLine()) != null) {
+            if (msg.equalsIgnoreCase("exit")) break;
             out.println(msg);
+        }
+        s.close();
     }
 }
