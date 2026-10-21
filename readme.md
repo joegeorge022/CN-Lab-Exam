@@ -1,7 +1,9 @@
 # CN LAB EXAM
 
-5. Client-Server communication using TCP
-6. Client-Server communication using UDP 
-7. Implement a multi-user chat server using TCP as the transport layer protocol.
-8. Implement a concurrent Time Server application using UDP 
-9. Develop a concurrent file server
+| Experiment | Title | Description |
+|---|---|---|
+| Exp 5 | Client-Server Communication Using TCP | The client inputs an integer N and creates an N × N square matrix populated with random numbers in the range [1,50]. It sends the matrix to the server, which identifies whether it is an upper triangular, lower triangular, or diagonal matrix. The server sends the matrix type as a string to the client, which prints it. |
+| Exp 6 | Client-Server Communication Using UDP | The client inputs a new-generation English sentence containing abbreviations and sends it to the server. The server translates the sentence into formal English and sends the translated sentence back to the client, which prints it. Only the following abbreviations need to be considered: tbh, ig, tbf, atm, irl, lol, asap, omg, ttyl, idk, nvm. Sample input: "Really idc about this stupid server as it is of no use irl but atm, I will design one, tbf to the professor." Expected output: "Really I don't care about this stupid server as it is of no use in real life but at the moment, I will design one, to be fair to the professor." |
+| Exp 7 | Multi-User Chat Server Using TCP | Implement a multi-user chat server using TCP as the transport layer protocol. |
+| Exp 8 | Concurrent Time Server Using UDP | Implement a concurrent time server application using UDP to execute the program on a remote server. The client sends a time request to the server, which returns its system time. The client then displays the received time value. |
+| Exp 9 | Concurrent File Server | Develop a concurrent file server that provides the file requested by the client if it exists. If the file does not exist, the server sends an appropriate message to the client. The server must also send its process ID (PID) to the client for display along with either the file contents or the error message. |
