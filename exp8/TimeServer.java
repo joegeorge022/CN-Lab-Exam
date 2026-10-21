@@ -1,10 +1,9 @@
-
 import java.net.*;
 import java.util.*;
 
 class TimeServer {
     public static void main(String[] args) throws Exception {
-        DatagramSocket ds = new DatagramSocket(5003);
+        DatagramSocket ds = new DatagramSocket(5503);
         System.out.println("Time Server Started");
 
         while (true) {
@@ -12,13 +11,16 @@ class TimeServer {
             DatagramPacket p = new DatagramPacket(b, b.length);
             ds.receive(p);
 
+            InetAddress ip = p.getAddress();
+            int port = p.getPort();
+
             new Thread(() -> {
                 try {
-                    String time = new Date().toString();
-                    byte[] r = time.getBytes();
-
-                    ds.send(new DatagramPacket(r, r.length,
-                        p.getAddress(), p.getPort()));
+                    byte[] time = new Date().toString().getBytes();
+                    synchronized (ds) {
+                        ds.send(new DatagramPacket(
+                            time, time.length, ip, port));
+                    }
                 } catch (Exception e) {}
             }).start();
         }
