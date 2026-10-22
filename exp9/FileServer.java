@@ -6,41 +6,27 @@ class FileServer {
         ServerSocket ss = new ServerSocket(5504);
         long pid = ProcessHandle.current().pid();
 
-        System.out.println("File Server Started. PID: " + pid);
-
         while (true) {
             Socket s = ss.accept();
-
             new Thread(() -> {
                 try {
                     BufferedReader in = new BufferedReader(
                         new InputStreamReader(s.getInputStream()));
                     PrintWriter out = new PrintWriter(
-                        s.getOutputStream(), true);
+                        s.getOutputStream(),true);
+                    String name = in.readLine();
+                    out.println("PID: "+pid);
 
-                    String filename = in.readLine();
-                    File file = new File(filename);
-
-                    out.println("Server PID: " + pid);
-
-                    if (file.isFile()) {
-                        out.println("File found:");
-                        BufferedReader fr = new BufferedReader(
-                            new FileReader(file));
-
+                    File f = new File(name);
+                    if (f.isFile()) {
+                        BufferedReader fr = new BufferedReader(new FileReader(f));
                         String line;
-                        while ((line = fr.readLine()) != null)
-                            out.println(line);
-
+                        while ((line=fr.readLine())!=null) out.println(line);
                         fr.close();
-                    } else {
-                        out.println("File not found!");
-                    }
+                    } else out.println("File not found!");
 
                     s.close();
-                } catch (Exception e) {
-                    System.out.println("Error");
-                }
+                } catch (Exception e) {}
             }).start();
         }
     }
