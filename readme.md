@@ -120,3 +120,364 @@
 8. Check whether the requested file exists.
 9. If the file exists, read and send its contents; otherwise, send a file-not-found message.
 10. Close the client connection and continue accepting requests.
+
+
+# Experiment 5: Client–Server Communication Using TCP
+
+### TCPServer.java
+
+```java
+import java.net.*;
+import java.io.*;
+
+class TCPServer {
+    public static void main(String[] args) throws Exception {
+        ServerSocket ss = new ServerSocket(5500);
+        Socket s = ss.accept();
+        DataInputStream in = new DataInputStream(s.getInputStream());
+        PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+
+        int n = in.readInt();
+        int[][] a = new int[n][n];
+
+        for (int i=0; i<n; i++)
+            for (int j=0; j<n; j++)
+                a[i][j] = in.readInt();
+
+        boolean u=true, l=true, d=true;
+        for (int i=0; i<n; i++)
+            for (int j=0; j<n; j++) {
+                if (i>j && a[i][j]!=0) u=false;
+                if (i<j && a[i][j]!=0) l=false;
+                if (i!=j && a[i][j]!=0) d=false;
+            }
+
+        out.println(d ? "Diagonal" : u ? "Upper Triangular" :
+                    l ? "Lower Triangular" : "Neither");
+        s.close();
+        ss.close();
+    }
+}
+```
+
+### TCPClient.java
+
+```java
+import java.net.*;
+import java.io.*;
+import java.util.*;
+
+class TCPClient {
+    public static void main(String[] args) throws Exception {
+        Socket s = new Socket("localhost", 5500);
+        DataOutputStream out = new DataOutputStream(s.getOutputStream());
+        BufferedReader in = new BufferedReader(
+            new InputStreamReader(s.getInputStream()));
+        Scanner sc = new Scanner(System.in);
+        Random r = new Random();
+
+        System.out.print("Enter N: ");
+        int n = sc.nextInt();
+        out.writeInt(n);
+
+        for (int i=0; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                int x = r.nextInt(50)+1;
+                System.out.print(x+" ");
+                out.writeInt(x);
+            }
+            System.out.println();
+        }
+
+        out.flush();
+        System.out.println("Type: "+in.readLine());
+        s.close();
+    }
+}
+```
+
+# Experiment 6: Client–Server Communication Using UDP
+
+### UDPServer.java
+
+```java
+import java.net.*;
+
+class UDPServer {
+    public static void main(String[] args) throws Exception {
+        DatagramSocket ds = new DatagramSocket(5501);
+
+        String[] a = {"tbh","ig","tbf","atm","irl","lol",
+                      "asap","omg","ttyl","idk","nvm"};
+        String[] b = {"to be honest","I guess","to be fair",
+                      "at the moment","in real life","laughing out loud",
+                      "as soon as possible","oh my God",
+                      "talk to you later","I don't know","never mind"};
+
+        byte[] buf = new byte[2048];
+        DatagramPacket p = new DatagramPacket(buf, buf.length);
+        ds.receive(p);
+
+        String msg = new String(p.getData(), 0, p.getLength());
+
+        for (int i=0; i<a.length; i++)
+            msg = msg.replaceAll("(?i)\\b"+a[i]+"\\b", b[i]);
+
+        byte[] reply = msg.getBytes();
+        ds.send(new DatagramPacket(reply, reply.length,
+            p.getAddress(), p.getPort()));
+        ds.close();
+    }
+}
+```
+
+### UDPClient.java
+
+```java
+import java.net.*;
+import java.util.*;
+
+class UDPClient {
+    public static void main(String[] args) throws Exception {
+        DatagramSocket ds = new DatagramSocket();
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter sentence: ");
+        byte[] b = sc.nextLine().getBytes();
+
+        InetAddress ip = InetAddress.getByName("localhost");
+        ds.send(new DatagramPacket(b, b.length, ip, 5501));
+
+        byte[] r = new byte[2048];
+        DatagramPacket p = new DatagramPacket(r, r.length);
+        ds.receive(p);
+
+        System.out.println("Formal English: "+
+            new String(p.getData(), 0, p.getLength()));
+        ds.close();
+    }
+}
+```
+
+# Experiment 7: Multi-user Chat Server Using TCP
+
+### ChatServer.java
+
+```java
+import java.net.*;
+import java.io.*;
+import java.util.*;
+
+class ChatServer {
+    static Vector<PrintWriter> clients = new Vector<>();
+
+    public static void main(String[] args) throws Exception {
+        ServerSocket ss = new ServerSocket(5502);
+
+        while (true) {
+            Socket s = ss.accept();
+
+            new Thread(() -> {
+                PrintWriter out = null;
+                try {
+                    BufferedReader in = new BufferedReader(
+                        new InputStreamReader(s.getInputStream()));
+                    out = new PrintWriter(s.getOutputStream(), true);
+                    clients.add(out);
+
+                    String msg;
+                    while ((msg = in.readLine()) != null)
+                        synchronized (clients) {
+                            for (PrintWriter c : clients)
+                                c.println(msg);
+                        }
+                } catch (Exception e) {
+                } finally {
+                    if (out != null) clients.remove(out);
+                    try { s.close(); } catch (Exception e) {}
+                }
+            }).start();
+        }
+    }
+}
+```
+
+### ChatClient.java
+
+```java
+import java.net.*;
+import java.io.*;
+
+class ChatClient {
+    public static void main(String[] args) throws Exception {
+        Socket s = new Socket("localhost", 5502);
+        BufferedReader in = new BufferedReader(
+            new InputStreamReader(s.getInputStream()));
+        PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+        BufferedReader kb = new BufferedReader(
+            new InputStreamReader(System.in));
+
+        new Thread(() -> {
+            try {
+                String m;
+                while ((m = in.readLine()) != null)
+                    System.out.println(m);
+            } catch (Exception e) {}
+        }).start();
+
+        String m;
+        while ((m = kb.readLine()) != null) {
+            if (m.equalsIgnoreCase("exit")) break;
+            out.println(m);
+        }
+        s.close();
+    }
+}
+```
+
+# Experiment 8: Concurrent Time Server Using UDP
+
+### TimeServer.java
+
+```java
+import java.net.*;
+import java.util.*;
+
+class TimeServer {
+    public static void main(String[] args) throws Exception {
+        DatagramSocket ds = new DatagramSocket(5503);
+
+        while (true) {
+            DatagramPacket p = new DatagramPacket(new byte[100], 100);
+            ds.receive(p);
+
+            new Thread(() -> {
+                try {
+                    byte[] t = new Date().toString().getBytes();
+                    synchronized (ds) {
+                        ds.send(new DatagramPacket(t, t.length,
+                            p.getAddress(), p.getPort()));
+                    }
+                } catch (Exception e) {}
+            }).start();
+        }
+    }
+}
+```
+
+### TimeClient.java
+
+```java
+import java.net.*;
+
+class TimeClient {
+    public static void main(String[] args) throws Exception {
+        DatagramSocket ds = new DatagramSocket();
+        byte[] b = "TIME".getBytes();
+
+        ds.send(new DatagramPacket(b, b.length,
+            InetAddress.getByName("localhost"), 5503));
+
+        DatagramPacket p = new DatagramPacket(new byte[100], 100);
+        ds.receive(p);
+
+        System.out.println("Server Time: "+
+            new String(p.getData(), 0, p.getLength()));
+        ds.close();
+    }
+}
+```
+
+# Experiment 9: Concurrent File Server
+
+### FileServer.java
+
+```java
+import java.net.*;
+import java.io.*;
+
+class FileServer {
+    public static void main(String[] args) throws Exception {
+        ServerSocket ss = new ServerSocket(5504);
+        long pid = ProcessHandle.current().pid();
+
+        while (true) {
+            Socket s = ss.accept();
+
+            new Thread(() -> {
+                try {
+                    BufferedReader in = new BufferedReader(
+                        new InputStreamReader(s.getInputStream()));
+                    PrintWriter out = new PrintWriter(
+                        s.getOutputStream(), true);
+
+                    String name = in.readLine();
+                    out.println("PID: "+pid);
+
+                    File f = new File(name);
+                    if (f.isFile()) {
+                        BufferedReader fr = new BufferedReader(
+                            new FileReader(f));
+                        String line;
+                        while ((line = fr.readLine()) != null)
+                            out.println(line);
+                        fr.close();
+                    } else {
+                        out.println("File not found!");
+                    }
+                    s.close();
+                } catch (Exception e) {}
+            }).start();
+        }
+    }
+}
+```
+
+### FileClient.java
+
+```java
+import java.net.*;
+import java.io.*;
+import java.util.*;
+
+class FileClient {
+    public static void main(String[] args) throws Exception {
+        Socket s = new Socket("localhost", 5504);
+        BufferedReader in = new BufferedReader(
+            new InputStreamReader(s.getInputStream()));
+        PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter filename: ");
+        out.println(sc.nextLine());
+
+        String line;
+        while ((line = in.readLine()) != null)
+            System.out.println(line);
+
+        s.close();
+    }
+}
+```
+
+## How to Run
+
+Compile the client and server files for each experiment:
+
+```bash
+javac TCPServer.java TCPClient.java
+```
+
+Run the server in one terminal:
+
+```bash
+java TCPServer
+```
+
+Run the client in another terminal:
+
+```bash
+java TCPClient
+```
+
+Use the appropriate filenames for each experiment. Start the server before running the client.
