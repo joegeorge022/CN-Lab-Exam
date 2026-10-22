@@ -10,7 +10,6 @@
 7. Display the matrix type.
 8. Close the socket and stop.
 
-
 #### Server Algorithm
 1. Start.
 2. Create a ServerSocket and wait for a client connection.
