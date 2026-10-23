@@ -1,5 +1,5 @@
 //Use this as last resort... type anything and everything you know from the actual code BUT run this in terminal.. to get output.
-//NOTE: If teacher gets suspicious you're done🥀.
+//NOTE: If teacher gets suspicious you're done🥀. Less Likely tho unless you act super sus. Show with full confidence.
 
 // TimeServer.java
 class TimeServer {
